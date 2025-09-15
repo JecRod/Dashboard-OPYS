@@ -1,6 +1,73 @@
+import { useEffect, useState } from "react";
+import { API_CONFIG } from "../Api-Config";
+import axios from "axios";
 
+interface Payment {
+  id: number;
+  name: string;
+  email: string;
+  total_price: number;
+  trasaction_id: string;
+  date: string;
+  payment_method: string;
+  status: string;
+}
 
 export default function ContentPayment() {
+    const [payment, setPayment] = useState<Payment[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setloading] = useState<boolean>(true);
+
+    useEffect(() => {
+        const fetchPayment = async () => {
+            try {
+                setloading(true);
+            setError(null);
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Authentication token not found');
+            }
+
+            const response = await axios.get(
+                `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.PAYMENT}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+        
+            let paymentData = response.data;
+        
+            if (response.data?.data) {
+                paymentData = response.data.data;
+            } else if (response.data?.payments) {
+                paymentData = response.data.payments;
+            }
+        
+            if (!Array.isArray(paymentData)) {
+                throw new Error('Invalid data format received from server');
+            }
+        
+            setPayment(paymentData);
+            } catch (err: unknown) {
+                const errorMessage = axios.isAxiosError(err)
+                ? err.response?.data?.message || err.message
+                : err instanceof Error
+                ? err.message
+                : 'Unknown error occurred';
+                
+                console.error('Error fetching menu:', err);
+                setError(`Failed to load menu: ${errorMessage}`);
+            } finally {
+                setloading(false);
+            }
+            
+        }
+        fetchPayment();
+    })
     return (
         <>
             <div className="page-inner">
@@ -29,20 +96,19 @@ export default function ContentPayment() {
                     </div>
                     <div className="card">
                     <div className="card-header">
-                        <div className="card-title">Table Head States</div>
+                        <div className="card-title">Payment List</div>
                     </div>
                     <div className="card-body">
                         <div className="table-responsive">
                         <table className="table table-head-bg-success">
                             <thead>
                             <tr>
+                                <th scope="col">Id</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">No Fon</th>
                                 <th scope="col">email</th>
-                                <th scope="col">Order</th>
                                 <th scope="col">Price</th>
                                 <th scope="col">Transaction id</th>
-                                <th scope="col">Date</th>
                                 <th scope="col">Receipt</th>
                             </tr>
                             </thead>

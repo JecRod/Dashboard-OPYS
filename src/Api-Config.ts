@@ -3,8 +3,8 @@ export const API_CONFIG = {
     ENDPOINT: {
         LOGIN: '/login',
         REGISTER: '/register',
-        MENU: '/dish',
-        ORDER: '/order',
-        ORDER_HISTORY: '/order-history'
+        ITEM: '/items',
+        ORDER: '/orders',
+        PAYMENT: '/payment'
     }
 }

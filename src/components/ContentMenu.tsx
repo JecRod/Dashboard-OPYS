@@ -32,7 +32,7 @@ export default function ContentMenu() {
         }
 
         const response = await axios.get(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.MENU}`,
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ITEM}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -90,7 +90,7 @@ export default function ContentMenu() {
                 });
 
                 await axios.delete(
-                  `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.MENU}/${id}`,
+                  `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ITEM}/${id}`,
                   {
                     headers: {
                       Authorization: `Bearer ${token}`,
@@ -182,7 +182,7 @@ export default function ContentMenu() {
                         <td>
                           <span className={`badge ${
                             item.category === 'food' ? 'bg-success' : 
-                            item.category === 'drink' ? 'bg-info' : 'bg-secondary'
+                            item.category === 'hall' ? 'bg-info' : 'bg-secondary'
                           }`}>
                             {item.category}
                           </span>
