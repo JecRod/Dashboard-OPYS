@@ -12,9 +12,14 @@ import PaymentPage from './pages/PaymentPage.tsx';
 import OrderPage from './pages/OrderPage.tsx';
 import CreateMenuPage from './pages/CreateMenuPage.tsx';
 import MenuPage from './pages/MenuPage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
 
 
 const router = createBrowserRouter([
+  {
+    path: "/login",   // 👈 Login does NOT use Layout
+    element: <LoginPage />,
+  },
   {
     path: "/",
     element: <Layout />,

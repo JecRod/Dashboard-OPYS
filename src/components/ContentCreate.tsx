@@ -22,7 +22,7 @@ export default function ContentCreate() {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("login_token");
       if (!token) {
         toast.error("Please login first");
         return;

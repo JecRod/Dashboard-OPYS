@@ -1,7 +1,63 @@
-
+import { useNavigate } from "react-router-dom";
+import { API_CONFIG } from "../Api-Config";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 
 export default function Navbar() {
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const navigate = useNavigate();
+
+  // ✅ Fetch user profile
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("login_token");
+      if (!token) return;
+
+      try {
+        const response = await axios.get(
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.PROFILE,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setUser(response.data.user);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+  
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("login_token");
+
+    try {
+      await axios.post(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.LOGOUT,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Logout API failed:", err);
+    }
+
+    localStorage.removeItem("login_token");
+      navigate("/login");
+    };
+    
+
+
+  
     return (
       <>
         <div className="main-header">
@@ -102,7 +158,7 @@ export default function Navbar() {
                       <img src="assets/img/profile.jpg" alt="..." className="avatar-img rounded-circle" />
                     </div>
                     <span className="profile-username">
-                      <span className="op-7">Hi,</span> <span className="fw-bold">Hizrian</span>
+                      <span className="op-7">Hi,</span> <span className="fw-bold">{user ? user.name : ""}</span>
                     </span>
                   </a>
                   <ul className="dropdown-menu dropdown-user animated fadeIn">
@@ -111,8 +167,8 @@ export default function Navbar() {
                         <div className="user-box">
                           <div className="avatar-lg"><img src="assets/img/profile.jpg" alt="image profile" className="avatar-img rounded" /></div>
                           <div className="u-text">
-                            <h4>Hizrian</h4>
-                            <p className="text-muted">hello@example.com</p><a href="profile.html" className="btn btn-xs btn-secondary btn-sm">View Profile</a>
+                            <h4>{user ? user.name : ""}</h4>
+                            <p className="text-muted">{user ? user.email : ""}</p><a href="profile.html" className="btn btn-xs btn-secondary btn-sm">View Profile</a>
                           </div>
                         </div>
                       </li>
@@ -124,7 +180,9 @@ export default function Navbar() {
                         <div className="dropdown-divider" />
                         <a className="dropdown-item" href="#">Account Setting</a>
                         <div className="dropdown-divider" />
-                        <a className="dropdown-item" href="#">Logout</a>
+                        {/* <a className="dropdown-item" href="#">Logout</a> */}
+                        <a className="dropdown-item" href="#" onClick={handleLogout}>Logout</a>
+
                       </li>
                     </div>
                   </ul>

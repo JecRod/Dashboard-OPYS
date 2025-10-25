@@ -1,6 +1,50 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { API_CONFIG } from "../Api-Config";
+import SalesChart from "./SalesChart";
+
 
 
 export default function Content() {
+  const [orderCount, setOrderCount] = useState<number | null>(null);
+  const [sales, setSales] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem("login_token"); // ✅ bearer
+        const response = await axios.get(
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.ORDER_COUNT,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const salesRes = await axios.get(
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.SALES,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+
+        setOrderCount(response.data.count); // <-- your API must return { count: 123 }
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      }
+    };
+
+    
+
+    
+
+    fetchOrders();
+  }, []);
+  
     return (
         <div className="container">
   <div className="page-inner">
@@ -30,6 +74,7 @@ export default function Content() {
           </div>
         </div>
       </div>
+      
       <div className="col-sm-6 col-md-3">
         <div className="card card-stats card-round">
           <div className="card-body">
@@ -49,6 +94,7 @@ export default function Content() {
           </div>
         </div>
       </div>
+
       <div className="col-sm-6 col-md-3">
         <div className="card card-stats card-round">
           <div className="card-body">
@@ -61,13 +107,14 @@ export default function Content() {
               <div className="col col-stats ms-3 ms-sm-0">
                 <div className="numbers">
                   <p className="card-category">Sales</p>
-                  <h4 className="card-title">$ 1,345</h4>
+                  <h4 className="card-title">RM {sales}</h4>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div className="col-sm-6 col-md-3">
         <div className="card card-stats card-round">
           <div className="card-body">
@@ -80,7 +127,7 @@ export default function Content() {
               <div className="col col-stats ms-3 ms-sm-0">
                 <div className="numbers">
                   <p className="card-category">Order</p>
-                  <h4 className="card-title">576</h4>
+                  <h4 className="card-title">{orderCount !== null ? orderCount : "Loading..."}</h4>
                 </div>
               </div>
             </div>
@@ -88,6 +135,7 @@ export default function Content() {
         </div>
       </div>
     </div>
+
     <div className="row">
       <div className="col-md-8">
         <div className="card card-round">
@@ -111,13 +159,16 @@ export default function Content() {
             </div>
           </div>
           <div className="card-body">
-            <div className="chart-container" style={{minHeight: 375}}>
+            <SalesChart />
+            {/* <div className="chart-container" style={{minHeight: 375}}>
               <canvas id="statisticsChart" />
-            </div>
+            </div> */}
             <div id="myChartLegend" />
           </div>
         </div>
       </div>
+
+
       <div className="col-md-4">
         <div className="card card-primary card-round">
           <div className="card-header">
@@ -147,6 +198,7 @@ export default function Content() {
             </div>
           </div>
         </div>
+        
         <div className="card card-round">
           <div className="card-body pb-0">
             <div className="h1 fw-bold float-end text-primary">+5%</div>

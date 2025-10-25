@@ -26,7 +26,7 @@ export default function ContentMenu() {
         setLoading(true);
         setError(null);
         
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('login_token');
         if (!token) {
           throw new Error('Authentication token not found');
         }
@@ -73,7 +73,7 @@ export default function ContentMenu() {
 
   const handleDelete = async (id: number, name: string) => {
         try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('login_token');
                 if (!token) {
                   toast.error('Please login to perform this action');
                   return;

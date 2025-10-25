@@ -19,17 +19,15 @@ export default function ContentOrder() {
   const [loading, setLoading] = useState<boolean>(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  // Fetch Orders
+  // ✅ Fetch Orders from API
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Authentication token not found");
-        }
+        const token = localStorage.getItem("login_token");
+        if (!token) throw new Error("Authentication token not found");
 
         const response = await axios.get(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}`,
@@ -41,16 +39,15 @@ export default function ContentOrder() {
           }
         );
 
-        let orderData = response.data;
-
-        if (response.data?.data) {
-          orderData = response.data.data;
-        } else if (response.data?.orders) {
-          orderData = response.data.orders;
-        }
+        // Adjust response parsing based on backend format
+        const orderData =
+          response.data?.data ||
+          response.data?.orders ||
+          response.data ||
+          [];
 
         if (!Array.isArray(orderData)) {
-          throw new Error("Invalid data format received from server");
+          throw new Error("Invalid data format from server");
         }
 
         setOrders(orderData);
@@ -59,7 +56,7 @@ export default function ContentOrder() {
           ? err.response?.data?.message || err.message
           : err instanceof Error
           ? err.message
-          : "Unknown error occurred";
+          : "Unknown error";
 
         console.error("Error fetching orders:", err);
         setError(`Failed to load orders: ${errorMessage}`);
@@ -71,14 +68,14 @@ export default function ContentOrder() {
     fetchOrders();
   }, []);
 
-  // Update Order Status
+  // ✅ Update Order Status
   const handleStatusUpdate = async (
     id: number,
     newStatus: string,
     name: string
   ) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("login_token");
       if (!token) {
         toast.error("Please login to perform this action");
         return;
@@ -93,6 +90,7 @@ export default function ContentOrder() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -100,10 +98,9 @@ export default function ContentOrder() {
       toast.dismiss();
       toast.success(`Status updated to "${newStatus}"`);
 
-      // Update UI
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === id ? { ...order, status: newStatus } : order
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === id ? { ...o, status: newStatus } : o
         )
       );
     } catch (err) {
@@ -125,25 +122,6 @@ export default function ContentOrder() {
     <div className="page-inner">
       <div className="page-header">
         <h3 className="fw-bold mb-3">All Orders</h3>
-        <ul className="breadcrumbs mb-3">
-          <li className="nav-home">
-            <a href="#">
-              <i className="icon-home" />
-            </a>
-          </li>
-          <li className="separator">
-            <i className="icon-arrow-right" />
-          </li>
-          <li className="nav-item">
-            <a href="#">Orders</a>
-          </li>
-          <li className="separator">
-            <i className="icon-arrow-right" />
-          </li>
-          <li className="nav-item">
-            <a href="#">All Orders</a>
-          </li>
-        </ul>
       </div>
 
       <div className="card">
@@ -151,17 +129,10 @@ export default function ContentOrder() {
           <div className="card-title">Order List</div>
         </div>
         <div className="card-body">
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
-
+          {error && <div className="alert alert-danger">{error}</div>}
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <div className="spinner-border text-primary" />
               <p className="mt-2">Loading orders...</p>
             </div>
           ) : (
@@ -174,9 +145,8 @@ export default function ContentOrder() {
                     <th>Order</th>
                     <th>Quantity</th>
                     <th>Order Type</th>
-                    <th>Table No</th>
-                    <th>Status Payment</th>
                     <th>Status</th>
+                    <th>Status Payment</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -203,7 +173,6 @@ export default function ContentOrder() {
                           >
                             {order.status}
                           </span>
-                          
                         </td>
                         <td>{order.status_payment}</td>
                         <td>
@@ -211,7 +180,6 @@ export default function ContentOrder() {
                             <button
                               className="btn btn-primary btn-sm dropdown-toggle"
                               data-bs-toggle="dropdown"
-                              aria-expanded="false"
                             >
                               Change Status
                             </button>
@@ -268,7 +236,7 @@ export default function ContentOrder() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="text-center">
+                      <td colSpan={8} className="text-center">
                         {error ? "Failed to load orders" : "No orders found"}
                       </td>
                     </tr>
