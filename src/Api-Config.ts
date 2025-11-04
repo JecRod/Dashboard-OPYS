@@ -1,14 +1,25 @@
 export const API_CONFIG = {
-    BASE_URL: 'https://burger-api.test',
+    BASE_URL: 'https://api.injector.me',
     ENDPOINT: {
         LOGIN: '/login',
         LOGOUT: "/logout",
         PROFILE: '/profile',
         REGISTER: '/register',
         ITEM: '/items',
+        UPDATE_ITEM: '/items',
+        ITEM_SHOW: "/items",
         ORDER: '/orders',
         ORDER_COUNT: '/orders/count',
         SALES: '/payments/count',
-        PAYMENT: '/payment'
+        PAYMENT: '/payments',
+        RECEIPT: (id: string | number) => `/payments/${id}/receipt`,
+        FEEDBACKS: '/feedback',
+        CHATBOT: '/chat',
+        CHATBOT_CREATE: '/chat/create',
+        OFFER: '/offers',
+        OFFER_CREATE: '/offers/create',
+        NOTIFICATION: '/notifications',
+        MARK_READ: (id: number) => `/notifications/${id}`,
+        HALL: '/halls',
     }
 }

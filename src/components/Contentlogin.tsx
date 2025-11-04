@@ -53,7 +53,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <div className={styles.cardBody}>
           <div className={styles.logo}>
-            <h3>KaiaAdmin</h3>
+            <h3>IFOSAdmin</h3>
             <p className={styles.textMuted}>Sign in to continue</p>
           </div>
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 // import { toast } from 'react-toastify';
 import { API_CONFIG } from '../Api-Config';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 interface MenuItem {
   id: number;
@@ -18,7 +19,7 @@ export default function ContentMenu() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -208,6 +209,16 @@ export default function ContentMenu() {
                           )}
                         </td>
                         <td>
+                          {/* ✏️ Edit Button */}
+                          <Link 
+                            to={`/edit-menu/${item.id}`} 
+                            className="btn btn-warning btn-sm me-2"
+                            title="Edit menu item"
+                          >
+                            <i className="fas fa-edit"></i> Edit
+                          </Link>
+
+                          {/* 🗑️ Delete Button */}
                           <button 
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDelete(item.id, item.name)}
@@ -215,7 +226,11 @@ export default function ContentMenu() {
                             title="Delete menu item"
                           >
                             {deletingId === item.id ? (
-                              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              <span
+                                className="spinner-border spinner-border-sm"
+                                role="status"
+                                aria-hidden="true"
+                              ></span>
                             ) : (
                               <>
                                 <i className="fas fa-trash-alt"></i> Delete

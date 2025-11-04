@@ -3,63 +3,50 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { API_CONFIG } from "../Api-Config";
 
-interface Order {
-  id: number;
-  name: string;
-  item: string;
+interface OrderItem {
+  item_id: number;
+  item_name: string;
   quantity: number;
+  subtotal_price: string;
+  special_request: string | null;
+}
+
+interface Order {
+  order_id: number;
+  customer_name: string;
+  total_price: string;
   order_type: string;
   status: string;
-  status_payment: string;
+  items: OrderItem[];
 }
 
 export default function ContentOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  // ✅ Fetch Orders from API
+  // ✅ Fetch Orders (only non-hall)
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
         const token = localStorage.getItem("login_token");
         if (!token) throw new Error("Authentication token not found");
 
-        const response = await axios.get(
+        const res = await axios.get(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        // Adjust response parsing based on backend format
-        const orderData =
-          response.data?.data ||
-          response.data?.orders ||
-          response.data ||
-          [];
+        // ✅ Filter out hall orders
+        const nonHallOrders = (res.data.data || []).filter(
+          (order: Order) => order.order_type !== "hall"
+        );
 
-        if (!Array.isArray(orderData)) {
-          throw new Error("Invalid data format from server");
-        }
-
-        setOrders(orderData);
-      } catch (err: unknown) {
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : err instanceof Error
-          ? err.message
-          : "Unknown error";
-
-        console.error("Error fetching orders:", err);
-        setError(`Failed to load orders: ${errorMessage}`);
+        setOrders(nonHallOrders);
+      } catch (err: any) {
+        setError(err.response?.data?.message || "Failed to load orders");
       } finally {
         setLoading(false);
       }
@@ -68,24 +55,34 @@ export default function ContentOrder() {
     fetchOrders();
   }, []);
 
-  // ✅ Update Order Status
-  const handleStatusUpdate = async (
-    id: number,
-    newStatus: string,
-    name: string
-  ) => {
+  // ✅ Delete Order
+  const handleDelete = async (orderId: number) => {
+    const confirmDelete = confirm("Are you sure you want to delete this order?");
+    if (!confirmDelete) return;
+
     try {
       const token = localStorage.getItem("login_token");
-      if (!token) {
-        toast.error("Please login to perform this action");
-        return;
-      }
+      await axios.delete(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}/${orderId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      setUpdatingId(id);
-      toast.loading(`Updating status for "${name}"...`);
+      toast.success("Order deleted successfully");
+      setOrders((prev) => prev.filter((o) => o.order_id !== orderId));
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("Failed to delete order");
+    }
+  };
+
+  // ✅ Change Status
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem("login_token");
+      if (!token) throw new Error("Authentication token not found");
 
       await axios.put(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}/${id}`,
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}/${orderId}`,
         { status: newStatus },
         {
           headers: {
@@ -95,26 +92,17 @@ export default function ContentOrder() {
         }
       );
 
-      toast.dismiss();
       toast.success(`Status updated to "${newStatus}"`);
 
+      // ✅ Update UI instantly
       setOrders((prev) =>
         prev.map((o) =>
-          o.id === id ? { ...o, status: newStatus } : o
+          o.order_id === orderId ? { ...o, status: newStatus } : o
         )
       );
     } catch (err) {
-      toast.dismiss();
-      console.error("Error updating order:", err);
-
-      let errorMessage = "Failed to update order status";
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
-
-      toast.error(errorMessage);
-    } finally {
-      setUpdatingId(null);
+      console.error("Status update failed:", err);
+      toast.error("Failed to update order status");
     }
   };
 
@@ -126,118 +114,113 @@ export default function ContentOrder() {
 
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Order List</div>
+          <div className="card-title">Order List (Food Only)</div>
         </div>
+
         <div className="card-body">
+          {loading && <p>Loading orders...</p>}
           {error && <div className="alert alert-danger">{error}</div>}
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="spinner-border text-primary" />
-              <p className="mt-2">Loading orders...</p>
-            </div>
-          ) : (
+
+          {!loading && (
             <div className="table-responsive">
               <table className="table table-head-bg-success">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Name</th>
+                    <th>Customer</th>
                     <th>Order</th>
-                    <th>Quantity</th>
-                    <th>Order Type</th>
+                    <th>Total Quantity</th>
                     <th>Status</th>
-                    <th>Status Payment</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.length > 0 ? (
-                    orders.map((order) => (
-                      <tr key={order.id}>
-                        <td>{order.id}</td>
-                        <td>{order.name}</td>
-                        <td>{order.item}</td>
-                        <td>{order.quantity}</td>
-                        <td>{order.order_type}</td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              order.status === "Process"
-                                ? "bg-warning"
-                                : order.status === "OnGoing"
-                                ? "bg-info"
-                                : order.status === "Completed"
-                                ? "bg-success"
-                                : "bg-secondary"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>{order.status_payment}</td>
-                        <td>
-                          <div className="btn-group">
+                    orders.map((order) => {
+                      const orderDetails = order.items
+                        .map((item) => `${item.item_name} x${item.quantity}`)
+                        .join(", ");
+
+                      const totalQty = order.items.reduce(
+                        (sum, item) => sum + (item.quantity || 0),
+                        0
+                      );
+
+                      return (
+                        <tr key={order.order_id}>
+                          <td>{order.order_id}</td>
+                          <td>{order.customer_name}</td>
+                          <td>{orderDetails}</td>
+                          <td>{totalQty}</td>
+                          <td>
+                            <div className="btn-group">
+                              <button
+                                className="btn btn-sm btn-outline-primary dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                              >
+                                {order.status}
+                              </button>
+                              <ul className="dropdown-menu">
+                                <li>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleStatusChange(order.order_id, "Process")
+                                    }
+                                  >
+                                    Process
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleStatusChange(order.order_id, "OnGoing")
+                                    }
+                                  >
+                                    OnGoing
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleStatusChange(order.order_id, "Completed")
+                                    }
+                                  >
+                                    Completed
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    className="dropdown-item text-danger"
+                                    onClick={() =>
+                                      handleStatusChange(order.order_id, "Cancelled")
+                                    }
+                                  >
+                                    Cancelled
+                                  </button>
+                                </li>
+                              </ul>
+                            </div>
+                          </td>
+                          <td>
                             <button
-                              className="btn btn-primary btn-sm dropdown-toggle"
-                              data-bs-toggle="dropdown"
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDelete(order.order_id)}
                             >
-                              Change Status
+                              Delete
                             </button>
-                            <ul className="dropdown-menu">
-                              <li>
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      order.id,
-                                      "OnGoing",
-                                      order.name
-                                    )
-                                  }
-                                  disabled={updatingId === order.id}
-                                >
-                                  OnGoing
-                                </button>
-                              </li>
-                              <li>
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      order.id,
-                                      "Completed",
-                                      order.name
-                                    )
-                                  }
-                                  disabled={updatingId === order.id}
-                                >
-                                  Completed
-                                </button>
-                              </li>
-                              <li>
-                                <button
-                                  className="dropdown-item text-danger"
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      order.id,
-                                      "Cancel",
-                                      order.name
-                                    )
-                                  }
-                                  disabled={updatingId === order.id}
-                                >
-                                  Cancel
-                                </button>
-                              </li>
-                            </ul>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={8} className="text-center">
-                        {error ? "Failed to load orders" : "No orders found"}
+                      <td colSpan={6} className="text-center">
+                        No food orders found
                       </td>
                     </tr>
                   )}
