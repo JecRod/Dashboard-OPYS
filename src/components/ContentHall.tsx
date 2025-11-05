@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { API_CONFIG } from "../Api-Config";
+import { Link } from "react-router-dom";
 
 interface Hall {
   id: number;
@@ -118,9 +119,10 @@ export default function ContentHall() {
                       </p>
                     </div>
                     <div className="card-footer d-flex justify-content-between">
-                      <a href={`#edit/${hall.id}`} className="btn btn-sm btn-primary">
+                      <Link to={`/edit-hall/${hall.id}`} className="btn btn-sm btn-primary">
                         Edit
-                      </a>
+                      </Link>
+
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(hall.id)}

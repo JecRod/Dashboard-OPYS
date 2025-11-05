@@ -27,33 +27,39 @@ export default function ContentOrder() {
 
   // ✅ Fetch Orders (only non-hall)
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const token = localStorage.getItem("login_token");
-        if (!token) throw new Error("Authentication token not found");
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem("login_token");
+      if (!token) throw new Error("Authentication token not found");
 
-        const res = await axios.get(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+      const res = await axios.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.ORDER}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        // ✅ Filter out hall orders
-        const nonHallOrders = (res.data.data || []).filter(
-          (order: Order) => order.order_type !== "hall"
-        );
+      // ✅ Filter only non-hall orders
+      const nonHallOrders = (res.data.data || []).filter(
+        (order: Order) => order.order_type !== "hall"
+      );
 
-        setOrders(nonHallOrders);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load orders");
-      } finally {
-        setLoading(false);
-      }
-    };
+      // ✅ Sort by order_id DESC (latest first)
+      const sortedOrders = nonHallOrders.sort(
+        (a: Order, b: Order) => b.order_id - a.order_id
+      );
 
-    fetchOrders();
-  }, []);
+      setOrders(sortedOrders);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to load orders");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchOrders();
+}, []);
+
 
   // ✅ Delete Order
   const handleDelete = async (orderId: number) => {

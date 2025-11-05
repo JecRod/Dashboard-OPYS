@@ -46,6 +46,9 @@ export default function ContentOrderHall() {
       const hallOrders = (res.data.data || []).filter(
         (o: Order) => o.order_type === "hall"
       );
+
+      
+      
       setOrders(hallOrders);
     } catch (err) {
       console.error(err);
@@ -140,7 +143,7 @@ export default function ContentOrderHall() {
             </div>
           ) : (
             <div className="table-responsive">
-              <table className="table table-head-bg-primary table-hover">
+              <table className="table table-head-bg-success">
                 <thead>
                   <tr>
                     <th>#</th>

@@ -23,50 +23,55 @@ export default function ContentPayment() {
 
   // ✅ Fetch all payments
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const token = localStorage.getItem("login_token");
-        if (!token) throw new Error("Authentication token not found");
+      const token = localStorage.getItem("login_token");
+      if (!token) throw new Error("Authentication token not found");
 
-        const response = await axios.get(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.PAYMENT}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const paymentData =
-          response.data.data || response.data.payments || response.data;
-
-        if (!Array.isArray(paymentData)) {
-          throw new Error("Invalid data format received from server");
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINT.PAYMENT}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-        setPayments(paymentData);
-      } catch (err: unknown) {
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : err instanceof Error
-          ? err.message
-          : "Unknown error occurred";
+      const paymentData =
+        response.data.data || response.data.payments || response.data;
 
-        console.error("Error fetching payments:", err);
-        setError(`Failed to load payments: ${errorMessage}`);
-        toast.error(`❌ ${errorMessage}`);
-      } finally {
-        setLoading(false);
+      if (!Array.isArray(paymentData)) {
+        throw new Error("Invalid data format received from server");
       }
-    };
 
-    fetchPayments();
-  }, []);
+      // ✅ Sort latest first
+      paymentData.sort((a: Payment, b: Payment) => b.id - a.id);
 
+      setPayments(paymentData);
+    } catch (err: unknown) {
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.message || err.message
+        : err instanceof Error
+        ? err.message
+        : "Unknown error occurred";
+
+      console.error("Error fetching payments:", err);
+      setError(`Failed to load payments: ${errorMessage}`);
+      toast.error(`❌ ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchPayments();
+}, []);
+
+
+  
   // ✅ Update payment status
   const handleStatusChange = async (id: number, newStatus: string) => {
     if (!window.confirm(`Change status to "${newStatus}"?`)) return;

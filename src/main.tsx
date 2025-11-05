@@ -24,6 +24,7 @@ import HallsPage from './pages/HallsPage.tsx';
 import CreateHallsPage from './pages/CreateHallPage.tsx';
 import EditMenuPage from './pages/EditMenuPage.tsx';
 import OrderHallPage from './pages/OrderHallPage.tsx';
+import EditHallPage from './pages/EditHallPage.tsx';
 
 
 const router = createBrowserRouter([
@@ -99,6 +100,10 @@ const router = createBrowserRouter([
       {
         path: "edit-menu/:id",
         element: <EditMenuPage />,
+      },
+      {
+        path: "edit-hall/:id",
+        element: <EditHallPage />,
       },
     ],
   },

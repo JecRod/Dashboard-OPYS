@@ -62,26 +62,13 @@ export default function Sidebar() {
                         <li>
                           <Link to="/create-menu" className="nav-btn"><span className="sub-item">Create Menu</span></Link>
                         </li>
-                      </ul>
-                    </div>
-                  </li>
-                  <li className="nav-item">
-                    <a data-bs-toggle="collapse" href="#sidebarLayouts">
-                      <i className="fas fa-th-list" />
-                      <p>Order</p>
-                      <span className="caret" />
-                    </a>
-                    <div className="collapse" id="sidebarLayouts">
-                      <ul className="nav nav-collapse">
                         <li>
                           <Link to="/order" className="nav-btn"><span className="sub-item">List Order</span></Link>
                         </li>
-                        <li>
-                          <Link to="/order-hall" className="nav-btn"><span className="sub-item">List Hall Order</span></Link>
-                        </li>
                       </ul>
                     </div>
                   </li>
+                  
 
                   <li className="nav-item">
                     <a data-bs-toggle="collapse" href="#hallLayouts">
@@ -97,24 +84,14 @@ export default function Sidebar() {
                         <li>
                           <Link to="/create-halls" className="nav-btn"><span className="sub-item">Create Hall</span></Link>
                         </li>
-                      </ul>
-                    </div>
-                  </li>
-
-                  <li className="nav-item">
-                    <a data-bs-toggle="collapse" href="#notificationLayouts">
-                      <i className="fas fa-th-list" />
-                      <p>Notifications</p>
-                      <span className="caret" />
-                    </a>
-                    <div className="collapse" id="notificationLayouts">
-                      <ul className="nav nav-collapse">
                         <li>
-                          <Link to="/notification" className="nav-btn"><span className="sub-item">List Notifications</span></Link>
+                          <Link to="/order-hall" className="nav-btn"><span className="sub-item">List Hall Order</span></Link>
                         </li>
                       </ul>
                     </div>
                   </li>
+
+                  
                   <li className="nav-item">
                     <a data-bs-toggle="collapse" href="#forms">
                       <i className="fas fa-pen-square" />
