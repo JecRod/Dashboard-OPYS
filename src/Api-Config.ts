@@ -12,6 +12,7 @@ export const API_CONFIG = {
         ORDER_COUNT: '/orders/count',
         SALES: '/payments/count',
         PAYMENT: '/payments',
+        MONTHLY_SALES: '/payments/monthly',
         RECEIPT: (id: string | number) => `/payments/${id}/receipt`,
         FEEDBACKS: '/feedback',
         CHATBOT: '/chat',

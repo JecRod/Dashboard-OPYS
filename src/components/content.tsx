@@ -2,57 +2,64 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_CONFIG } from "../Api-Config";
 import SalesChart from "./SalesChart";
+import { exportToExcel } from "../utils/exportToExcel";
 
 
+interface DailySalesData {
+  total: number;       // total sales amount
+  chartData: number[]; // sales for each day
+  labels: string[];    // labels for chart (dates)
+}
 
 export default function Content() {
   const [orderCount, setOrderCount] = useState<number | null>(null);
   const [sales, setSales] = useState<number>(0);
-
+  const [salesData, setSalesData] = useState<DailySalesData | null>(null);
+  const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchOrdersAndSales = async () => {
       try {
-        const token = localStorage.getItem("login_token"); // ✅ bearer
-        const response = await axios.get(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.ORDER_COUNT,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const token = localStorage.getItem("login_token");
+        const [orderRes, salesRes] = await Promise.all([
+          axios.get(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.ORDER_COUNT, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
 
-        const salesRes = await axios.get(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.SALES,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          // Optional: if API returns chart data
+          axios.get(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINT.SALES, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-        // ✅ Safely extract total sales from API response
-        const totalSales =
-          salesRes.data.total_sales || salesRes.data.sales || salesRes.data.total || 0;
+        setOrderCount(orderRes.data.count ?? 0);
+        const totalSales = salesRes.data.total_sales ?? salesRes.data.sales ?? 0;
+        setSales(totalSales);
 
-        setSales(totalSales); // ✅ update the state
-        setOrderCount(response.data.count);
-
-
-
-        setOrderCount(response.data.count); // <-- your API must return { count: 123 }
+        // Optional: if API returns chart data
+        setSalesData({
+          total: totalSales,
+          chartData: salesRes.data.chartData ?? [],
+          labels: salesRes.data.labels ?? [],
+        });
       } catch (err) {
-        console.error("Failed to fetch orders:", err);
+        console.error("Failed to fetch orders or sales:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    
-
-    
-
-    fetchOrders();
+    fetchOrdersAndSales();
   }, []);
+
+      const userData = [
+        { name: "Jimmy Denis", role: "Graphic Designer", email: "jimmy@example.com" },
+        { name: "Chandra Felix", role: "Sales Promotion", email: "chandra@example.com" },
+        { name: "Talha", role: "Front End Designer", email: "talha@example.com" },
+      ];
+
+
   
     return (
         <div className="container">
@@ -152,21 +159,18 @@ export default function Content() {
             <div className="card-head-row">
               <div className="card-title">User Statistics</div>
               <div className="card-tools">
-                <a href="#" className="btn btn-label-success btn-round btn-sm me-2">
+                <a onClick={() => exportToExcel(userData, "monthly_statistics.xlsx")} className="btn btn-label-success btn-round btn-sm me-2">
                   <span className="btn-label">
                     <i className="fa fa-pencil" />
                   </span>
                   Export
                 </a>
-                <a href="#" className="btn btn-label-info btn-round btn-sm">
-                  <span className="btn-label">
-                    <i className="fa fa-print" />
-                  </span>
-                  Print
-                </a>
+                
               </div>
             </div>
           </div>
+
+
           <div className="card-body">
             <SalesChart />
             {/* <div className="chart-container" style={{minHeight: 375}}>
@@ -178,49 +182,48 @@ export default function Content() {
       </div>
 
 
-      <div className="col-md-4">
-        <div className="card card-primary card-round">
-          <div className="card-header">
-            <div className="card-head-row">
-              <div className="card-title">Daily Sales</div>
-              <div className="card-tools">
-                <div className="dropdown">
-                  <button className="btn btn-sm btn-label-light dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Export
-                  </button>
-                  <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a className="dropdown-item" href="#">Action</a>
-                    <a className="dropdown-item" href="#">Another action</a>
-                    <a className="dropdown-item" href="#">Something else here</a>
+      {/* Daily Sales */}
+          <div className="col-md-4">
+            <div className="card card-primary card-round">
+              <div className="card-header">
+                <div className="card-head-row">
+                  <div className="card-title">Daily Sales</div>
+                  <div className="card-tools">
+                    <div className="dropdown">
+                      <button
+                        className="btn btn-sm btn-label-light dropdown-toggle"
+                        type="button"
+                        id="dropdownMenuButton"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        Export
+                      </button>
+                      <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a className="dropdown-item" href="#">Action</a>
+                        <a className="dropdown-item" href="#">Another action</a>
+                        <a className="dropdown-item" href="#">Something else here</a>
+                      </div>
+                    </div>
                   </div>
+                </div>
+                <div className="card-category">March 25 - April 02</div>
+              </div>
+              <div className="card-body pb-0">
+                <div className="mb-4 mt-2">
+                  <h1>
+                    {loading ? "Loading..." : `RM ${salesData?.total.toLocaleString() ?? sales}`}
+                  </h1>
+                </div>
+                <div className="pull-in">
+                  <canvas id="dailySalesChart" />
                 </div>
               </div>
             </div>
-            <div className="card-category">March 25 - April 02</div>
-          </div>
-          <div className="card-body pb-0">
-            <div className="mb-4 mt-2">
-              <h1>$4,578.58</h1>
-            </div>
-            <div className="pull-in">
-              <canvas id="dailySalesChart" />
-            </div>
           </div>
         </div>
-        
-        <div className="card card-round">
-          <div className="card-body pb-0">
-            <div className="h1 fw-bold float-end text-primary">+5%</div>
-            <h2 className="mb-2">17</h2>
-            <p className="text-muted">Users online</p>
-            <div className="pull-in sparkline-fix">
-              <div id="lineChart" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    =
+    
     <div className="row">
       <div className="col-md-4">
         <div className="card card-round">

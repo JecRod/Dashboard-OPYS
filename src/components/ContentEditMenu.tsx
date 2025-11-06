@@ -38,7 +38,14 @@ export default function ContentEditMenuItem() {
         );
 
         const data = res.data?.data || res.data;
-        setItem(data);
+
+        // Convert tinyint(1) → boolean
+        setItem({
+          ...data,
+          available: Boolean(data.is_available),
+        });
+
+
 
         setPreviewImage(data.image ? data.image : null);
       } catch (err) {
@@ -91,7 +98,7 @@ export default function ContentEditMenuItem() {
       formData.append("category", item.category);
 
       // ✅ Send correct field
-      formData.append("is_available", item.available ? "1" : "0");
+      formData.append("available", item.available ? "1" : "0");
 
       if (file) formData.append("image", file);
 

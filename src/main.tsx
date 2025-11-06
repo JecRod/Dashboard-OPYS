@@ -25,6 +25,7 @@ import CreateHallsPage from './pages/CreateHallPage.tsx';
 import EditMenuPage from './pages/EditMenuPage.tsx';
 import OrderHallPage from './pages/OrderHallPage.tsx';
 import EditHallPage from './pages/EditHallPage.tsx';
+import EditOfferPage from './pages/EditOfferPage.tsx';
 
 
 const router = createBrowserRouter([
@@ -104,6 +105,10 @@ const router = createBrowserRouter([
       {
         path: "edit-hall/:id",
         element: <EditHallPage />,
+      },
+      {
+        path: "edit-offer/:id",
+        element: <EditOfferPage />,
       },
     ],
   },

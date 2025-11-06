@@ -11,7 +11,7 @@ interface MenuItem {
   description: string;
   price: number;
   category: string;
-  available: boolean;
+  is_available: boolean;
   image: string;
 }
 
@@ -189,7 +189,7 @@ export default function ContentMenu() {
                           </span>
                         </td>
                         <td>
-                          {item.available ? (
+                          {item.is_available ? (
                             <span className="badge bg-success">Yes</span>
                           ) : (
                             <span className="badge bg-danger">No</span>
